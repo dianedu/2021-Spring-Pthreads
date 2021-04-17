@@ -22,7 +22,7 @@ volatile bool done = false;
 volatile int num_worker_threads;
 
 // function prototypes
-void calculate_square(long number);
+void* calculate_square(void *number);
 //void *idle(void *value);
 
 //defining the node and singly linked-list data type (adapted from https://www.learn-c.org/en/Linked_lists)
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
   		sleep(temp_number);
   	}
   	else if(temp_action == 'p'){
-  		pthread_create(&tid, NULL, caculate_square, temp_number);
+  		pthread_create(&tid, NULL, calculate_square, temp_number);
   		pthread_join(tid, NULL);
   	}
   	else{
@@ -122,11 +122,11 @@ int main(int argc, char* argv[])
 /*
  * update global aggregate variables given a number
  */
-void calculate_square(long number)
+void *calculate_square(void *number)
 {
 
   // calculate the square
-  long the_square = number * number;
+  //void the_square = number * number; //Hmmmm....
 
   // ok that was not so hard, but let's pretend it was
   // simulate how hard it is to square this number!
