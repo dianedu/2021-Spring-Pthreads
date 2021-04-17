@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 // aggregate variables
 long sum = 0;
@@ -18,6 +19,7 @@ long odd = 0;
 long min = INT_MAX;
 long max = INT_MIN;
 bool done = false;
+int num_worker_threads;
 
 // function prototypes
 void calculate_square(long number);
@@ -59,10 +61,19 @@ void calculate_square(long number)
 int main(int argc, char* argv[])
 {
   // check and parse command line options
-  if (argc != 2) {
-    printf("Usage: sumsq <infile>\n");
+  if (argc != 3) {
+    printf("Usage: par_sumsq <infile> <number of threads>\n");
     exit(EXIT_FAILURE);
   }
+  
+  //Saving number of worker threads from in-line command
+  num_worker_threads = strtol(argv[2], NULL, 10);
+  //If number of worker threads are non-positive, display error and exit
+  if(num_worker_threads < 1){
+  	printf("ERROR: Number of worker threads is not non-positive\n");
+  	exit(EXIT_FAILURE);
+  }
+  
   char *fn = argv[1];
   
   // load numbers and add them to the queue
