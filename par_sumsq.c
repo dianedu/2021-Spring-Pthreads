@@ -23,7 +23,7 @@ volatile int num_worker_threads;
 
 // function prototypes
 void calculate_square(long number);
-void *idle(void *value);
+//void *idle(void *value);
 
 //defining the node and singly linked-list data type (adapted from https://www.learn-c.org/en/Linked_lists)
 //defining the node data structure
@@ -36,12 +36,21 @@ typedef struct node {
 void push(node_t * head, char act, int val);
 node_t* pop(node_t ** head);
 
+/*void print_list(node_t * head) {
+    node_t * current = head;
+
+    while (current != NULL) {
+        printf("%d\n", current->val);
+        current = current->next;
+    }
+}*/
+
 //MAIN
 int main(int argc, char* argv[])
 {
   // check and parse command line options
   if (argc != 3) {
-    printf("Usage: par_sumsq <infile> <number of threads>\n");
+    //printf("Usage: par_sumsq <infile> <number of threads>\n");
     exit(EXIT_FAILURE);
   }
   
@@ -49,47 +58,62 @@ int main(int argc, char* argv[])
   num_worker_threads = strtol(argv[2], NULL, 10);
   //If number of worker threads are non-positive, display error and exit
   if(num_worker_threads < 1){
-  	printf("ERROR: Number of worker threads is not non-positive\n");
+  	//printf("ERROR: Number of worker threads is not non-positive\n");
   	exit(EXIT_FAILURE);
   }
   
   char *fn = argv[1];
   
+  node_t * head = NULL;
+  head = (node_t*) malloc(sizeof(node_t));
+  if (head == NULL){
+  	return 1;
+  }
+  node_t * popped_node = NULL;
+  popped_node = (node_t*) malloc(sizeof(node_t));
+  
   // load numbers and add them to the queue
   FILE* fin = fopen(fn, "r");
   char action;
   long num;
-  node_t * head = NULL;
-  head = (node_t*) malloc(sizeof(node_t));
-  node_t * popped_node = NULL;
-  popped_node = (node_t*) malloc(sizeof(node_t));
-  
   while (fscanf(fin, "%c %ld\n", &action, &num) == 2) {
   	push(head, action, num);
-  
-  
-    /*if (action == 'p') {            // process, do some work
-      calculate_square(num);
-    } else if (action == 'w') {     // wait, nothing new happening
-      sleep(num);
-      
-    } else {
-      printf("ERROR: Unrecognized action: '%c'\n", action);
-      exit(EXIT_FAILURE);
-    }*/
+    
   }
   fclose(fin);
   
   //Creating worker threads
-  pthread_t tid = 0;
-  void *idle_value;
-  for (long i = 1; i <= num_worker_threads; ++i){
-  	pthread_create(&tid, NULL, idle, &idle_value); 
+  pthread_t workers[num_worker_threads];
+  for(long i = 0; i < num_worker_threads; ++i){
+  	pthread_join(workers[i], NULL);
+  }
+  
+  //Reading from the task queue and carrying tasks out accordingly
+  popped_node = pop(&head);
+  while (popped_node != NULL){
+  	char temp_action;
+  	char temp_number;
+  	pthread_t tid = 0;
+  	temp_action = popped_node -> act;
+  	temp_number = popped_node -> val;
+  	if(temp_action == 'w'){
+  		sleep(temp_number);
+  	}
+  	else if(temp_action == 'p'){
+  		pthread_create(&tid, NULL, caculate_square, temp_number);
+  		pthread_join(tid, NULL);
+  	}
+  	else{
+  		//printf("ERROR: Unrecognized action: '%c'\n", action);
+      		exit(EXIT_FAILURE);
+  	}
+  	//printf("%c %d\n", temp_action, temp_number);
   	++tid;
+  	popped_node = pop(&head);
   }
   
   // print results
-  printf("%ld %ld %ld %ld\n", sum, odd, min, max);
+  //printf("%ld %ld %ld %ld\n", sum, odd, min, max);
   
   // clean up and return
   return (EXIT_SUCCESS);
@@ -108,10 +132,11 @@ void calculate_square(long number)
   // simulate how hard it is to square this number!
   sleep(number);
 
-  // let's add this to our (global) sum
+	//NEED IMPLEMENT MUTEX LOCK TO ENSURE GLOBAL VARIABLES ARE UPDATED CORRECTLY -- when another process is updating, block until free to update
+/*// let's add this to our (global) sum
   sum += the_square;
 
-  // now we also tabulate some (meaningless) statistics
+ // now we also tabulate some (meaningless) statistics
   if (number % 2 == 1) {
     // how many of our numbers were odd?
     odd++;
@@ -125,15 +150,15 @@ void calculate_square(long number)
   // and what was the biggest one?
   if (number > max) {
     max = number;
-  }
+  }*/
 }
 
 /*
  * Function for pthreads to be idle
  */
-void *idle(void *value){
+/*void *idle(void *value){
 
-}
+}*/
 
 /*
  * Function to add a node to end of linked list
@@ -169,3 +194,6 @@ node_t* pop(node_t ** head) {
 
     return node_to_return;
 }
+
+
+
