@@ -14,26 +14,28 @@
 #include <pthread.h>
 
 // aggregate variables
-long sum = 0;
-long odd = 0;
-long min = INT_MAX;
-long max = INT_MIN;
-bool done = false;
-int num_worker_threads;
+volatile long sum = 0;
+volatile long odd = 0;
+volatile long min = INT_MAX;
+volatile long max = INT_MIN;
+volatile bool done = false;
+volatile int num_worker_threads;
 
 // function prototypes
 void calculate_square(long number);
 
-//defining the node and singly linked-list data type (from https://www.learn-c.org/en/Linked_lists)
+//defining the node and singly linked-list data type (adapted from https://www.learn-c.org/en/Linked_lists)
 //defining the node data structure
 typedef struct node {
+    char action;
     int val;
     struct node * next;
 } node_t;
 //Function prototypes for linked list functions
-void push(node_t * head, int val);
-int pop(node_t ** head);
+void push(node_t * head, char action, int val);
+node_t* pop(node_t ** head);
 
+//MAIN
 int main(int argc, char* argv[])
 {
   // check and parse command line options
@@ -62,6 +64,7 @@ int main(int argc, char* argv[])
       calculate_square(num);
     } else if (action == 'w') {     // wait, nothing new happening
       sleep(num);
+      
     } else {
       printf("ERROR: Unrecognized action: '%c'\n", action);
       exit(EXIT_FAILURE);
@@ -112,14 +115,15 @@ void calculate_square(long number)
 /*
  * Function to add a node to end of linked list
  */
-void push(node_t * head, int val) {
+void push(node_t * head, char action, int val) {
     node_t * current = head;
     while (current->next != NULL) {
         current = current->next;
     }
 
-    /* now we can add a new variable */
+    /*adding new variable */
     current->next = (node_t *) malloc(sizeof(node_t));
+    current->next->action = action;
     current->next->val = val;
     current->next->next = NULL;
 }
@@ -127,18 +131,18 @@ void push(node_t * head, int val) {
 /*
  * Function to remove first node of linked list
  */
-int pop(node_t ** head) {
-    int retval = -1;
+node_t* pop(node_t ** head) {
+    node_t* node_to_return;
     node_t * next_node = NULL;
 
     if (*head == NULL) {
-        return -1;
+        return NULL;
     }
 
     next_node = (*head)->next;
-    retval = (*head)->val;
+    node_to_return = *head;
     free(*head);
     *head = next_node;
 
-    return retval;
+    return node_to_return;
 }
