@@ -1,5 +1,5 @@
 /*
- * sumsq.c
+ * par_sumsq.c
  *
  * CS 446.646 Project 1 (Pthreads)
  *
