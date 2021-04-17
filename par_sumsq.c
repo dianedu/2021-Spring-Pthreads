@@ -24,39 +24,15 @@ int num_worker_threads;
 // function prototypes
 void calculate_square(long number);
 
-/*
- * update global aggregate variables given a number
- */
-void calculate_square(long number)
-{
-
-  // calculate the square
-  long the_square = number * number;
-
-  // ok that was not so hard, but let's pretend it was
-  // simulate how hard it is to square this number!
-  sleep(number);
-
-  // let's add this to our (global) sum
-  sum += the_square;
-
-  // now we also tabulate some (meaningless) statistics
-  if (number % 2 == 1) {
-    // how many of our numbers were odd?
-    odd++;
-  }
-
-  // what was the smallest one we had to deal with?
-  if (number < min) {
-    min = number;
-  }
-
-  // and what was the biggest one?
-  if (number > max) {
-    max = number;
-  }
-}
-
+//defining the node and singly linked-list data type (from https://www.learn-c.org/en/Linked_lists)
+//defining the node data structure
+typedef struct node {
+    int val;
+    struct node * next;
+} node_t;
+//Function prototypes for linked list functions
+void push(node_t * head, int val);
+int pop(node_t ** head);
 
 int main(int argc, char* argv[])
 {
@@ -100,3 +76,69 @@ int main(int argc, char* argv[])
   return (EXIT_SUCCESS);
 }
 
+/*
+ * update global aggregate variables given a number
+ */
+void calculate_square(long number)
+{
+
+  // calculate the square
+  long the_square = number * number;
+
+  // ok that was not so hard, but let's pretend it was
+  // simulate how hard it is to square this number!
+  sleep(number);
+
+  // let's add this to our (global) sum
+  sum += the_square;
+
+  // now we also tabulate some (meaningless) statistics
+  if (number % 2 == 1) {
+    // how many of our numbers were odd?
+    odd++;
+  }
+
+  // what was the smallest one we had to deal with?
+  if (number < min) {
+    min = number;
+  }
+
+  // and what was the biggest one?
+  if (number > max) {
+    max = number;
+  }
+}
+
+/*
+ * Function to add a node to end of linked list
+ */
+void push(node_t * head, int val) {
+    node_t * current = head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+
+    /* now we can add a new variable */
+    current->next = (node_t *) malloc(sizeof(node_t));
+    current->next->val = val;
+    current->next->next = NULL;
+}
+
+/*
+ * Function to remove first node of linked list
+ */
+int pop(node_t ** head) {
+    int retval = -1;
+    node_t * next_node = NULL;
+
+    if (*head == NULL) {
+        return -1;
+    }
+
+    next_node = (*head)->next;
+    retval = (*head)->val;
+    free(*head);
+    *head = next_node;
+
+    return retval;
+}
