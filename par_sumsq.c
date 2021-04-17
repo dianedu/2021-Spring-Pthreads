@@ -23,16 +23,17 @@ volatile int num_worker_threads;
 
 // function prototypes
 void calculate_square(long number);
+void *idle(void *value);
 
 //defining the node and singly linked-list data type (adapted from https://www.learn-c.org/en/Linked_lists)
 //defining the node data structure
 typedef struct node {
-    char action;
+    char act;
     int val;
     struct node * next;
 } node_t;
 //Function prototypes for linked list functions
-void push(node_t * head, char action, int val);
+void push(node_t * head, char act, int val);
 node_t* pop(node_t ** head);
 
 //MAIN
@@ -58,9 +59,16 @@ int main(int argc, char* argv[])
   FILE* fin = fopen(fn, "r");
   char action;
   long num;
-
+  node_t * head = NULL;
+  head = (node_t*) malloc(sizeof(node_t));
+  node_t * popped_node = NULL;
+  popped_node = (node_t*) malloc(sizeof(node_t));
+  
   while (fscanf(fin, "%c %ld\n", &action, &num) == 2) {
-    if (action == 'p') {            // process, do some work
+  	push(head, action, num);
+  
+  
+    /*if (action == 'p') {            // process, do some work
       calculate_square(num);
     } else if (action == 'w') {     // wait, nothing new happening
       sleep(num);
@@ -68,9 +76,17 @@ int main(int argc, char* argv[])
     } else {
       printf("ERROR: Unrecognized action: '%c'\n", action);
       exit(EXIT_FAILURE);
-    }
+    }*/
   }
   fclose(fin);
+  
+  //Creating worker threads
+  pthread_t tid = 0;
+  void *idle_value;
+  for (long i = 1; i <= num_worker_threads; ++i){
+  	pthread_create(&tid, NULL, idle, &idle_value); 
+  	++tid;
+  }
   
   // print results
   printf("%ld %ld %ld %ld\n", sum, odd, min, max);
@@ -113,9 +129,16 @@ void calculate_square(long number)
 }
 
 /*
+ * Function for pthreads to be idle
+ */
+void *idle(void *value){
+
+}
+
+/*
  * Function to add a node to end of linked list
  */
-void push(node_t * head, char action, int val) {
+void push(node_t * head, char act, int val) {
     node_t * current = head;
     while (current->next != NULL) {
         current = current->next;
@@ -123,7 +146,7 @@ void push(node_t * head, char action, int val) {
 
     /*adding new variable */
     current->next = (node_t *) malloc(sizeof(node_t));
-    current->next->action = action;
+    current->next->act = act;
     current->next->val = val;
     current->next->next = NULL;
 }
