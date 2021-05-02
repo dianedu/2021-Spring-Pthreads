@@ -32,25 +32,19 @@ typedef struct node {
     int val;
     struct node * next;
 } node_t;
+
 //Function prototypes for linked list functions
 void push(node_t * head, char act, int val);
-node_t* pop(node_t ** head);
+//node_t* pop(node_t ** head);
 
-/*void print_list(node_t * head) {
-    node_t * current = head;
-
-    while (current != NULL) {
-        printf("%d\n", current->val);
-        current = current->next;
-    }
-}*/
+void traverseList(node_t * head);
 
 //MAIN
 int main(int argc, char* argv[])
 {
   // check and parse command line options
   if (argc != 3) {
-    //printf("Usage: par_sumsq <infile> <number of threads>\n");
+    printf("Usage: par_sumsq <infile> <number of threads>\n");
     exit(EXIT_FAILURE);
   }
   
@@ -58,7 +52,7 @@ int main(int argc, char* argv[])
   num_worker_threads = strtol(argv[2], NULL, 10);
   //If number of worker threads are non-positive, display error and exit
   if(num_worker_threads < 1){
-  	//printf("ERROR: Number of worker threads is not non-positive\n");
+  	printf("ERROR: Number of worker threads is non-positive\n");
   	exit(EXIT_FAILURE);
   }
   
@@ -176,9 +170,23 @@ void push(node_t * head, char act, int val) {
     current->next->next = NULL;
 }
 
+void traverseList(node_t * head) {
+    node_t * current = head;
+	int value;
+	
+    while (current != NULL) {
+    	value = current -> val;
+    	if (value){
+			printf("%c ", current->act);
+	        printf("%d\n", current->val);
+        }
+        current = current->next;
+    }
+}
+
 /*
  * Function to remove first node of linked list
- */
+ *
 node_t* pop(node_t ** head) {
     node_t* node_to_return;
     node_t * next_node = NULL;
@@ -193,7 +201,7 @@ node_t* pop(node_t ** head) {
     *head = next_node;
 
     return node_to_return;
-}
+}*/
 
 
 
