@@ -1,17 +1,25 @@
 /*
- * par_sumsq.c
+ * sumsq.c
  *
  * CS 446.646 Project 1 (Pthreads)
  *
  * Compile with --std=c99
  */
 
+#include <pthread.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <pthread.h>
+
+// defining the node data structure
+typedef struct node {
+    char act;
+    int val;
+    struct node * next;
+} node_t;
+
 
 // aggregate variables
 volatile long sum = 0;
@@ -22,27 +30,14 @@ volatile bool done = false;
 volatile int num_worker_threads;
 
 // function prototypes
-void* calculate_square(void *number);
-//void *idle(void *value);
-
-//defining the node and singly linked-list data type (adapted from https://www.learn-c.org/en/Linked_lists)
-//defining the node data structure
-typedef struct node {
-    char act;
-    int val;
-    struct node * next;
-} node_t;
-
-//Function prototypes for linked list functions
+void calculate_square(long number);
+//function prototypes for the linked list data structure
 void push(node_t * head, char act, int val);
-//node_t* pop(node_t ** head);
-
 void traverseList(node_t * head);
 
-//MAIN
-int main(int argc, char* argv[])
-{
-  // check and parse command line options
+int main (int argc, char* argv[]){
+
+// check and parse command line options
   if (argc != 3) {
     printf("Usage: par_sumsq <infile> <number of threads>\n");
     exit(EXIT_FAILURE);
@@ -55,16 +50,14 @@ int main(int argc, char* argv[])
   	printf("ERROR: Number of worker threads is non-positive\n");
   	exit(EXIT_FAILURE);
   }
-  
-  char *fn = argv[1];
+
+ char *fn = argv[1];
   
   node_t * head = NULL;
   head = (node_t*) malloc(sizeof(node_t));
   if (head == NULL){
   	return 1;
   }
-  node_t * popped_node = NULL;
-  popped_node = (node_t*) malloc(sizeof(node_t));
   
   // load numbers and add them to the queue
   FILE* fin = fopen(fn, "r");
@@ -76,83 +69,12 @@ int main(int argc, char* argv[])
   }
   fclose(fin);
   
-  //Creating worker threads
-  pthread_t workers[num_worker_threads];
-  for(long i = 0; i < num_worker_threads; ++i){
-  	pthread_join(workers[i], NULL);
-  }
-  
-  //Reading from the task queue and carrying tasks out accordingly
-  popped_node = pop(&head);
-  while (popped_node != NULL){
-  	char temp_action;
-  	char temp_number;
-  	pthread_t tid = 0;
-  	temp_action = popped_node -> act;
-  	temp_number = popped_node -> val;
-  	if(temp_action == 'w'){
-  		sleep(temp_number);
-  	}
-  	else if(temp_action == 'p'){
-  		pthread_create(&tid, NULL, calculate_square, temp_number);
-  		pthread_join(tid, NULL);
-  	}
-  	else{
-  		//printf("ERROR: Unrecognized action: '%c'\n", action);
-      		exit(EXIT_FAILURE);
-  	}
-  	//printf("%c %d\n", temp_action, temp_number);
-  	++tid;
-  	popped_node = pop(&head);
-  }
-  
-  // print results
-  //printf("%ld %ld %ld %ld\n", sum, odd, min, max);
-  
-  // clean up and return
-  return (EXIT_SUCCESS);
+  traverseList(head);
+
+
+	// clean up and return
+	return (EXIT_SUCCESS);
 }
-
-/*
- * update global aggregate variables given a number
- */
-void *calculate_square(void *number)
-{
-
-  // calculate the square
-  //void the_square = number * number; //Hmmmm....
-
-  // ok that was not so hard, but let's pretend it was
-  // simulate how hard it is to square this number!
-  sleep(number);
-
-	//NEED IMPLEMENT MUTEX LOCK TO ENSURE GLOBAL VARIABLES ARE UPDATED CORRECTLY -- when another process is updating, block until free to update
-/*// let's add this to our (global) sum
-  sum += the_square;
-
- // now we also tabulate some (meaningless) statistics
-  if (number % 2 == 1) {
-    // how many of our numbers were odd?
-    odd++;
-  }
-
-  // what was the smallest one we had to deal with?
-  if (number < min) {
-    min = number;
-  }
-
-  // and what was the biggest one?
-  if (number > max) {
-    max = number;
-  }*/
-}
-
-/*
- * Function for pthreads to be idle
- */
-/*void *idle(void *value){
-
-}*/
 
 /*
  * Function to add a node to end of linked list
@@ -185,23 +107,34 @@ void traverseList(node_t * head) {
 }
 
 /*
- * Function to remove first node of linked list
- *
-node_t* pop(node_t ** head) {
-    node_t* node_to_return;
-    node_t * next_node = NULL;
+ * update global aggregate variables given a number
+ */
+void calculate_square(long number)
+{
 
-    if (*head == NULL) {
-        return NULL;
-    }
+  // calculate the square
+  long the_square = number * number;
 
-    next_node = (*head)->next;
-    node_to_return = *head;
-    free(*head);
-    *head = next_node;
+  // ok that was not so hard, but let's pretend it was
+  // simulate how hard it is to square this number!
+  sleep(number);
 
-    return node_to_return;
-}*/
+  // let's add this to our (global) sum
+  sum += the_square;
 
+  // now we also tabulate some (meaningless) statistics
+  if (number % 2 == 1) {
+    // how many of our numbers were odd?
+    odd++;
+  }
 
+  // what was the smallest one we had to deal with?
+  if (number < min) {
+    min = number;
+  }
 
+  // and what was the biggest one?
+  if (number > max) {
+    max = number;
+  }
+}
