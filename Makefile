@@ -14,7 +14,8 @@ sumsq: sumsq.c
 # eventually you will need to create a parallel version:
 #
 par_sumsq: par_sumsq.c
-	gcc -g -O2 --std=c99 -Wall -o par_sumsq par_sumsq.c -lpthread
+	#MODIFIED to -O0 from -O2, change back when need to
+	gcc -g -O0 --std=c99 -Wall -o par_sumsq par_sumsq.c -lpthread
 
 #
 # whenever you want to 'clean and try again', do 'make clean':

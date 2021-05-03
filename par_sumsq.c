@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+//defining the node and singly linked-list data type (adapted from https://www.learn-c.org/en/Linked_lists)
 // defining the node data structure
 typedef struct node {
     char act;
@@ -28,6 +29,8 @@ volatile long min = INT_MAX;
 volatile long max = INT_MIN;
 volatile bool done = false;
 volatile int num_worker_threads;
+volatile int worker_thread_count = 0;
+
 
 // function prototypes
 void calculate_square(long number);
@@ -64,14 +67,21 @@ int main (int argc, char* argv[]){
   char action;
   long num;
   while (fscanf(fin, "%c %ld\n", &action, &num) == 2) {
-  	push(head, action, num);
-    
+  	if(action == 'p' || action == 'w'){
+  		push(head, action, num);
+    }
+    else{
+    	printf("ERROR: Unrecognized action: '%c'\n", action);
+    	exit(EXIT_FAILURE);
+    }
   }
   fclose(fin);
   
-  traverseList(head);
-
-
+  traverseList(head);//function to traverse through task queue and perform its tasks
+  
+	// print results
+	printf("%ld %ld %ld %ld\n", sum, odd, min, max);
+  
 	// clean up and return
 	return (EXIT_SUCCESS);
 }
@@ -93,14 +103,30 @@ void push(node_t * head, char act, int val) {
 }
 
 void traverseList(node_t * head) {
+	pthread_t thread_id;
     node_t * current = head;
 	int value;
+	char action;
 	
     while (current != NULL) {
     	value = current -> val;
     	if (value){
-			printf("%c ", current->act);
-	        printf("%d\n", current->val);
+    		action = current -> act;
+    		switch (action){
+    			case 'w':	sleep(value);
+    						break;
+    			case 'p':	//if (worker_thread_count < num_worker_threads){
+    							pthread_create(&thread_id, NULL, (void*) calculate_square, (void*) value);
+  								pthread_join(thread_id, NULL);
+  								++worker_thread_count;
+    						//}
+    						
+    						//else{
+    							//wait until a thread is free
+    						//}
+    						break;
+    		
+    		}
         }
         current = current->next;
     }
@@ -117,7 +143,7 @@ void calculate_square(long number)
 
   // ok that was not so hard, but let's pretend it was
   // simulate how hard it is to square this number!
-  sleep(number);
+  //sleep(number);
 
   // let's add this to our (global) sum
   sum += the_square;
