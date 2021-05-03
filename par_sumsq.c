@@ -29,7 +29,9 @@ volatile long min = INT_MAX;
 volatile long max = INT_MIN;
 volatile bool done = false;
 volatile int num_worker_threads;
-volatile int worker_thread_count = 0;
+//volatile int worker_thread_count = 0;
+pthread_t thread_id;
+pthread_mutex_t lock;
 
 
 // function prototypes
@@ -77,6 +79,9 @@ int main (int argc, char* argv[]){
   }
   fclose(fin);
   
+  //variables for pthreads
+  //pthread_t thread_id[num_worker_threads];
+  pthread_mutex_init(&lock, NULL);
   traverseList(head);//function to traverse through task queue and perform its tasks
   
 	// print results
@@ -103,7 +108,8 @@ void push(node_t * head, char act, int val) {
 }
 
 void traverseList(node_t * head) {
-	pthread_t thread_id;
+	node_t * delete_node= NULL;
+  	delete_node = (node_t*) malloc(sizeof(node_t));
     node_t * current = head;
 	int value;
 	char action;
@@ -116,9 +122,9 @@ void traverseList(node_t * head) {
     			case 'w':	sleep(value);
     						break;
     			case 'p':	//if (worker_thread_count < num_worker_threads){
-    							pthread_create(&thread_id, NULL, (void*) calculate_square, (void*) value);
+    							pthread_create(&(thread_id/*[1]*/), NULL, (void*) calculate_square, (void*) value);
   								pthread_join(thread_id, NULL);
-  								++worker_thread_count;
+  								//++worker_thread_count;
     						//}
     						
     						//else{
@@ -128,7 +134,9 @@ void traverseList(node_t * head) {
     		
     		}
         }
+        delete_node = current;
         current = current->next;
+        free(delete_node); //delete node that is just traversed
     }
 }
 
@@ -137,7 +145,6 @@ void traverseList(node_t * head) {
  */
 void calculate_square(long number)
 {
-
   // calculate the square
   long the_square = number * number;
 
@@ -145,6 +152,8 @@ void calculate_square(long number)
   // simulate how hard it is to square this number!
   //sleep(number);
 
+	//need to acquire a lock to update the global variables
+	pthread_mutex_lock(&lock);
   // let's add this to our (global) sum
   sum += the_square;
 
@@ -163,4 +172,6 @@ void calculate_square(long number)
   if (number > max) {
     max = number;
   }
+  
+  pthread_mutex_unlock(&lock); //thread releases lock after completion of its task
 }
