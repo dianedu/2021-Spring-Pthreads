@@ -29,8 +29,7 @@ volatile long min = INT_MAX;
 volatile long max = INT_MIN;
 volatile bool done = false;
 volatile int num_worker_threads;
-//volatile int worker_thread_count = 0;
-pthread_t thread_id;
+volatile int worker_thread_count = 0;
 pthread_mutex_t lock;
 
 
@@ -79,8 +78,6 @@ int main (int argc, char* argv[]){
   }
   fclose(fin);
   
-  //variables for pthreads
-  //pthread_t thread_id[num_worker_threads];
   pthread_mutex_init(&lock, NULL);
   traverseList(head);//function to traverse through task queue and perform its tasks
   
@@ -108,11 +105,13 @@ void push(node_t * head, char act, int val) {
 }
 
 void traverseList(node_t * head) {
+	pthread_t thread_id[num_worker_threads];
 	node_t * delete_node= NULL;
   	delete_node = (node_t*) malloc(sizeof(node_t));
     node_t * current = head;
 	int value;
 	char action;
+	int thread_to_use;
 	
     while (current != NULL) {
     	value = current -> val;
@@ -121,15 +120,18 @@ void traverseList(node_t * head) {
     		switch (action){
     			case 'w':	sleep(value);
     						break;
-    			case 'p':	//if (worker_thread_count < num_worker_threads){
-    							pthread_create(&(thread_id/*[1]*/), NULL, (void*) calculate_square, (void*) value);
-  								pthread_join(thread_id, NULL);
-  								//++worker_thread_count;
-    						//}
-    						
-    						//else{
-    							//wait until a thread is free
-    						//}
+    			case 'p':	if(worker_thread_count <= num_worker_threads){
+    							pthread_create(&(thread_id[worker_thread_count]), NULL, (void*) calculate_square, (void*) value);
+  								++worker_thread_count;
+    						}
+    						else{
+    							if(pthread_join(thread_id[worker_thread_count], NULL) == 0){
+    								pthread_create(&(thread_id[worker_thread_count]), NULL, (void*) calculate_square, (void*) value);
+    							}
+    							else{
+    								
+    							}
+    						}
     						break;
     		
     		}
@@ -150,7 +152,7 @@ void calculate_square(long number)
 
   // ok that was not so hard, but let's pretend it was
   // simulate how hard it is to square this number!
-  //sleep(number);
+  sleep(number);
 
 	//need to acquire a lock to update the global variables
 	pthread_mutex_lock(&lock);
