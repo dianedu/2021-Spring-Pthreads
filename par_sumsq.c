@@ -107,7 +107,8 @@ void push(node_t * head, char act, int val) {
 
 void traverseList(node_t * head) {
 	pthread_t thread_id[num_worker_threads];
-	pthread_t tid;
+	//pthread_t tid;
+	int i = 0;
 	node_t * delete_node= NULL;
   	delete_node = (node_t*) malloc(sizeof(node_t));
     node_t * current = head;
@@ -121,27 +122,10 @@ void traverseList(node_t * head) {
     		action = current -> act;
     		switch (action){
     			case 'w':	sleep(value);
-  								//++worker_thread_count;
     						break;
-    			case 'p':	for(int i = 0; i < num_worker_threads; ++i){
-    							pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
-    							delete_node = current;
-        						current = current->next;
-        						free(delete_node); //delete node that is just traversed
-        						value = current -> val;
-        						action = current -> act;
-    						}
-    						for(int i = 0; i< num_worker_threads; ++i){
-    							pthread_join(thread_id[i], NULL);
-    						}
-    						//else{
-    							//if(pthread_join(thread_id[worker_thread_count], NULL) == 0){
-    							//	pthread_create(&(thread_id[worker_thread_count]), NULL, (void*) calculate_square, (void*) value);
-    							//}
-    							//else{
-    								
-    							//}
-    						//}
+    						
+    			case 'p':	pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
+    						pthread_join(thread_id[i], NULL);
     						break;
     		
     		}
