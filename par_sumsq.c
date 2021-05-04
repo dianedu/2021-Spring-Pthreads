@@ -38,7 +38,8 @@ pthread_mutex_t lock;
 void calculate_square(long number);
 //function prototypes for the linked list data structure
 void push(node_t * head, char act, int val);
-void traverseList(node_t * head);
+node_t * pop(node_t *head);
+//void traverseList(node_t * head);
 
 int main (int argc, char* argv[]){
 
@@ -80,7 +81,42 @@ int main (int argc, char* argv[]){
   fclose(fin);
   
   pthread_mutex_init(&lock, NULL);
-  traverseList(head);//function to traverse through task queue and perform its tasks
+  
+  	node_t * task = NULL;
+  	task = head;
+  	int value;
+  	pthread_t thread_id[num_worker_threads];
+	int i = 0;
+  while(task != NULL){
+  	value = task-> val;
+  	if(value){
+  		action = task -> act;
+  		switch (action){
+    			case 'w':	sleep(value);
+    						break;
+    						
+    			case 'p':	pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
+    						if (pthread_join(thread_id[i], NULL) == 1){
+    							if (i < num_worker_threads){
+    								++i;
+    								pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
+    							}
+    						}
+    						
+    						for(int j = i; j >= 0; --j){
+    							pthread_join(thread_id[j], NULL);
+    						}
+    						break;
+    		
+    	}
+  		
+  	}
+  	task = task -> next;
+  	
+  }
+  
+  
+  //traverseList(head);//function to traverse through task queue and perform its tasks
   
 	// print results
 	printf("%ld %ld %ld %ld\n", sum, odd, min, max);
@@ -105,35 +141,22 @@ void push(node_t * head, char act, int val) {
     current->next->next = NULL;
 }
 
-void traverseList(node_t * head) {
-	pthread_t thread_id[num_worker_threads];
-	//pthread_t tid;
-	int i = 0;
-	node_t * delete_node= NULL;
-  	delete_node = (node_t*) malloc(sizeof(node_t));
-    node_t * current = head;
-	int value;
-	char action;
-	int thread_to_use;
-	
-    while (current != NULL) {
-    	value = current -> val;
-    	if (value){
-    		action = current -> act;
-    		switch (action){
-    			case 'w':	sleep(value);
-    						break;
-    						
-    			case 'p':	pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
-    						pthread_join(thread_id[i], NULL);
-    						break;
-    		
-    		}
-        }
-        delete_node = current;
-        current = current->next;
-        free(delete_node); //delete node that is just traversed
-    }
+
+/*
+ * Function to get first node of list
+ */
+node_t * pop(node_t *head){
+	node_t * node_to_return;
+	node_to_return = head;
+	head = head -> next;
+	return node_to_return;
+}
+
+/*
+ * Function to deallocate node
+ */
+void deallocate (node_t * node_to_delete){
+	free (node_to_delete);
 }
 
 /*
