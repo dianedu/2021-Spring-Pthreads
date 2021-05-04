@@ -96,17 +96,18 @@ int main (int argc, char* argv[]){
     						break;
     						
     			case 'p':	pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
-    						if (pthread_join(thread_id[i], NULL) == 1){
+    						if (pthread_join(thread_id[i], NULL) == 0){
     							if (i < num_worker_threads){
     								++i;
     								pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
     							}
     						}
     						
-    						for(int j = i; j >= 0; --j){
-    							pthread_join(thread_id[j], NULL);
-    						}
+    						
     						break;
+    	for(int j = i; j >= 0; --j){
+    		pthread_join(thread_id[j], NULL);
+    	}
     		
     	}
   		
