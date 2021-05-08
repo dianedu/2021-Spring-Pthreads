@@ -221,6 +221,6 @@ void calculate_square(long number)
     max = number;
   }
   //thread is no longer busy
-  busy_thread[i] = 0;
+  busy_thread[i-1] = 0;
   pthread_mutex_unlock(&lock); //thread releases lock after completion of its task
 }
