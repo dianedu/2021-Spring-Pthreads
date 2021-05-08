@@ -102,7 +102,10 @@ int main (int argc, char* argv[]){
     						break;
     						
     			case 'p':	if (i < num_worker_threads){
+    							//set thread status as busy
+								busy_thread[i] = 1;
     							pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
+    							
     							++i;
     							++worker_thread_count;
     						}
@@ -116,6 +119,7 @@ int main (int argc, char* argv[]){
     							}
     							pthread_create(&(thread_id[j]), NULL, (void*) calculate_square, (void*) value);
     							i = j;
+    							++i;
     						}
     						break;
     		
@@ -125,7 +129,9 @@ int main (int argc, char* argv[]){
   	task = task -> next;
   	
   }
-  
+  //program exit
+  //check for thread completion -- check to make sure still not busy
+  //check link list (completely traversing and taken care of
 	for(int id = 0; id < worker_thread_count;++id){
 		pthread_join(thread_id[id], NULL);
 		//while(busy_thread[id]){
@@ -183,11 +189,11 @@ void deallocate (node_t * node_to_delete){
 void calculate_square(long number)
 {
 	printf("%d\n", number);
-	printf("Thread number: %d\n",i);
-//need to acquire a lock to update the global variables
+	//printf("Thread number: %d\n",i);
+	
+	//need to acquire a lock to update the global variables
 	pthread_mutex_lock(&lock);
-	//set thread status as busy
-	busy_thread[i] = 1;
+	
   // calculate the square
   long the_square = number * number;
 	pthread_mutex_unlock(&lock);
@@ -214,6 +220,7 @@ void calculate_square(long number)
   if (number > max) {
     max = number;
   }
-  busy_thread[i] = 0; //thread is no longer busy
+  //thread is no longer busy
+  busy_thread[i] = 0;
   pthread_mutex_unlock(&lock); //thread releases lock after completion of its task
 }
