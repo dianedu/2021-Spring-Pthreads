@@ -29,9 +29,10 @@ volatile long min = INT_MAX;
 volatile long max = INT_MIN;
 volatile bool done = false;
 volatile int num_worker_threads;
-//volatile int worker_thread_count = 0;
+volatile int worker_thread_count = 0;
 pthread_mutex_t lock;
-
+volatile int i = 0;
+volatile bool busy_thread[1000];
 
 
 // function prototypes
@@ -86,7 +87,12 @@ int main (int argc, char* argv[]){
   	task = head;
   	int value;
   	pthread_t thread_id[num_worker_threads];
-	int i = 0;
+  	
+  	for(int initialize = 0; initialize < num_worker_threads; ++initialize){
+  		busy_thread[initialize] = 0; //initializing this so all threads created are initially available
+  	}
+  	int j = 0;
+	
   while(task != NULL){
   	value = task-> val;
   	if(value){
@@ -95,19 +101,23 @@ int main (int argc, char* argv[]){
     			case 'w':	sleep(value);
     						break;
     						
-    			case 'p':	pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
-    						if (pthread_join(thread_id[i], NULL) == 0){
-    							if (i < num_worker_threads){
-    								++i;
-    								pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
-    							}
+    			case 'p':	if (i < num_worker_threads){
+    							pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
+    							++i;
+    							++worker_thread_count;
     						}
-    						
-    						
+    						else{ //if all threads are busy, then wait until not busy
+    							j = 0;
+    							while(busy_thread[j]){
+    								++j;
+    								if(j >= num_worker_threads){
+    									j = 0;	
+    								}
+    							}
+    							pthread_create(&(thread_id[j]), NULL, (void*) calculate_square, (void*) value);
+    							i = j;
+    						}
     						break;
-    	for(int j = i; j >= 0; --j){
-    		pthread_join(thread_id[j], NULL);
-    	}
     		
     	}
   		
@@ -116,12 +126,19 @@ int main (int argc, char* argv[]){
   	
   }
   
-  
-  //traverseList(head);//function to traverse through task queue and perform its tasks
-  
+	for(int id = 0; id < worker_thread_count;++id){
+		pthread_join(thread_id[id], NULL);
+		//while(busy_thread[id]){
+			//wait
+		//}
+	}
 	// print results
 	printf("%ld %ld %ld %ld\n", sum, odd, min, max);
-  
+	//For debugging
+	/*while(1){
+		printf("%ld %ld %ld %ld\n", sum, odd, min, max);
+		sleep(1);
+  	}*/
 	// clean up and return
 	return (EXIT_SUCCESS);
 }
@@ -165,14 +182,19 @@ void deallocate (node_t * node_to_delete){
  */
 void calculate_square(long number)
 {
+	printf("%d\n", number);
+	printf("Thread number: %d\n",i);
+//need to acquire a lock to update the global variables
+	pthread_mutex_lock(&lock);
+	//set thread status as busy
+	busy_thread[i] = 1;
   // calculate the square
   long the_square = number * number;
-
+	pthread_mutex_unlock(&lock);
   // ok that was not so hard, but let's pretend it was
   // simulate how hard it is to square this number!
   sleep(number);
 
-	//need to acquire a lock to update the global variables
 	pthread_mutex_lock(&lock);
   // let's add this to our (global) sum
   sum += the_square;
@@ -192,6 +214,6 @@ void calculate_square(long number)
   if (number > max) {
     max = number;
   }
-  
+  busy_thread[i] = 0; //thread is no longer busy
   pthread_mutex_unlock(&lock); //thread releases lock after completion of its task
 }
