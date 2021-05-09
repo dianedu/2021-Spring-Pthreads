@@ -1,7 +1,7 @@
 /*
  * sumsq.c
  *
- * CS 446.646 Project 1 (Pthreads)
+ * CS 446.646 Project 5 (Pthreads)
  *
  * Compile with --std=c99
  */
@@ -84,6 +84,7 @@ int main (int argc, char* argv[]){
   pthread_mutex_init(&lock, NULL);
   
   	node_t * task = NULL;
+  	node_t * node_to_delete = NULL;
   	task = head;
   	int value;
   	pthread_t thread_id[num_worker_threads];
@@ -116,6 +117,7 @@ int main (int argc, char* argv[]){
     									j = 0;	
     								}
     							}
+    							busy_thread[j] = 1;
     							pthread_create(&(thread_id[j]), NULL, (void*) calculate_square, (void*) value);
     							i = j;
     							++i;
@@ -125,8 +127,9 @@ int main (int argc, char* argv[]){
     	}
   		
   	}
+  	node_to_delete = task;
   	task = task -> next;
-  	
+  	free(node_to_delete);
   }
  	//wait until all threads complete their task before terminating
 	for(int id = 0; id < worker_thread_count;++id){
@@ -164,15 +167,14 @@ void push(node_t * head, char act, int val) {
  */
 void calculate_square(long number)
 {
-	//printf("%d\n", number);
-	//printf("Thread number: %d\n",i);
-	
+	//printf("%d\n", number); //for debugging
 	//need to acquire a lock to update the global variables
 	pthread_mutex_lock(&lock);
 	
   // calculate the square
   long the_square = number * number;
 	pthread_mutex_unlock(&lock);
+	
   // ok that was not so hard, but let's pretend it was
   // simulate how hard it is to square this number!
   sleep(number);
@@ -197,6 +199,6 @@ void calculate_square(long number)
     max = number;
   }
   //thread is no longer busy
-  busy_thread[i - 1] = 0;
+  busy_thread[i-1] = 0;
   pthread_mutex_unlock(&lock); //thread releases lock after completion of its task
 }
