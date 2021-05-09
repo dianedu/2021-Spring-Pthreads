@@ -105,7 +105,6 @@ int main (int argc, char* argv[]){
     							//set thread status as busy
 								busy_thread[i] = 1;
     							pthread_create(&(thread_id[i]), NULL, (void*) calculate_square, (void*) value);
-    							
     							++i;
     							++worker_thread_count;
     						}
@@ -129,14 +128,9 @@ int main (int argc, char* argv[]){
   	task = task -> next;
   	
   }
-  //program exit
-  //check for thread completion -- check to make sure still not busy
-  //check link list (completely traversing and taken care of
+ 	//wait until all threads complete their task before terminating
 	for(int id = 0; id < worker_thread_count;++id){
 		pthread_join(thread_id[id], NULL);
-		//while(busy_thread[id]){
-			//wait
-		//}
 	}
 	// print results
 	printf("%ld %ld %ld %ld\n", sum, odd, min, max);
@@ -165,30 +159,12 @@ void push(node_t * head, char act, int val) {
     current->next->next = NULL;
 }
 
-
-/*
- * Function to get first node of list
- */
-node_t * pop(node_t *head){
-	node_t * node_to_return;
-	node_to_return = head;
-	head = head -> next;
-	return node_to_return;
-}
-
-/*
- * Function to deallocate node
- */
-void deallocate (node_t * node_to_delete){
-	free (node_to_delete);
-}
-
 /*
  * update global aggregate variables given a number
  */
 void calculate_square(long number)
 {
-	printf("%d\n", number);
+	//printf("%d\n", number);
 	//printf("Thread number: %d\n",i);
 	
 	//need to acquire a lock to update the global variables
